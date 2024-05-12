@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(Actor))]
 public class Player : MonoBehaviour, Controls.IPlayerActions
 {
     private Controls controls;
