@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using static UnityEngine.EventSystems.EventTrigger;
 
 public class MapManager : MonoBehaviour
 {
@@ -20,7 +18,7 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    public static MapManager Get { get => instance; }
+    public static MapManager Get => instance;
 
     [Header("TileMaps")]
     public Tilemap FloorMap;
@@ -33,10 +31,9 @@ public class MapManager : MonoBehaviour
     public TileBase FogTile;
 
     [Header("Features")]
-    public Dictionary<Vector2Int, Node> Nodes = new Dictionary<Vector2Int, Node>();
-    public List<Vector3Int> VisibleTiles;
-    public Dictionary<Vector3Int, TileData> Tiles;
-    
+    public Dictionary<Vector2Int, Node> Nodes { get; private set; } = new Dictionary<Vector2Int, Node>();
+    public List<Vector3Int> VisibleTiles { get; private set; }
+    public Dictionary<Vector3Int, TileData> Tiles { get; private set; }
 
     [Header("Map Settings")]
     public int width = 80;
@@ -44,10 +41,17 @@ public class MapManager : MonoBehaviour
     public int roomMaxSize = 10;
     public int roomMinSize = 6;
     public int maxRooms = 30;
+    public int maxEnemies = 2;
 
     private void Start()
     {
+        SetMaxEnemies(maxEnemies);
         GenerateDungeon();
+    }
+
+    private void SetMaxEnemies(int max)
+    {
+        maxEnemies = max;
     }
 
     private void GenerateDungeon()
@@ -59,6 +63,7 @@ public class MapManager : MonoBehaviour
         generator.SetSize(width, height);
         generator.SetRoomSize(roomMinSize, roomMaxSize);
         generator.SetMaxRooms(maxRooms);
+        generator.SetMaxEnemies(maxEnemies);
         generator.Generate();
 
         AddTileMapToDictionary(FloorMap);
@@ -66,23 +71,12 @@ public class MapManager : MonoBehaviour
         SetupFogMap();
     }
 
-    public GameObject CreateActor(string name, Vector2 position)
-    {
-        GameObject actor = Instantiate(Resources.Load<GameObject>($"Prefabs/{name}"), new Vector3(position.x + 0.5f, position.y + 0.5f, 0), Quaternion.identity);
-        actor.name = name;
-        return actor;
-    }
-
     public bool InBounds(int x, int y) => 0 <= x && x < width && 0 <= y && y < height;
 
     public bool IsWalkable(Vector3 position)
     {
         Vector3Int gridPosition = FloorMap.WorldToCell(position);
-        if (!InBounds(gridPosition.x, gridPosition.y) || ObstacleMap.HasTile(gridPosition))
-        {
-            return false;
-        }
-        return true;
+        return InBounds(gridPosition.x, gridPosition.y) && !ObstacleMap.HasTile(gridPosition);
     }
 
     private void AddTileMapToDictionary(Tilemap tilemap)
@@ -141,9 +135,12 @@ public class MapManager : MonoBehaviour
 
         foreach (var pos in playerFOV)
         {
-            Tiles[pos].IsVisible = true;
-            FogMap.SetColor(pos, Color.clear);
-            VisibleTiles.Add(pos);
+            if (Tiles.ContainsKey(pos))
+            {
+                Tiles[pos].IsVisible = true;
+                FogMap.SetColor(pos, Color.clear);
+                VisibleTiles.Add(pos);
+            }
         }
     }
 }
