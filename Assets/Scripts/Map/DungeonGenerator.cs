@@ -140,9 +140,9 @@ public class DungeonGenerator : MonoBehaviour
         {
             int x = Random.Range(room.X + 1, room.X + room.Width - 1);
             int y = Random.Range(room.Y + 1, room.Y + room.Height - 1);
-            string enemyType = Random.value < 0.5f ? "Ghost" : "Spider";
+            string enemyType = Random.value < 0.5f ? "Ant" : "Tiger";
 
-            GameManager.Get.CreateActor(enemyType, new Vector2(x, y));
+            GameObject gameObject1 = GameManager.Get.CreateActor(enemyType, new Vector2(x, y));
         }
     }
 }

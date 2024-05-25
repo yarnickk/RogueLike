@@ -23,14 +23,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        if (Player == null)
-        {
-            Player = FindObjectOfType<Actor>();
-            if (Player == null)
-            {
-                Debug.LogError("Player Actor component is not assigned.");
-            }
-        }
+       
     }
 
     public static GameManager Get => instance;

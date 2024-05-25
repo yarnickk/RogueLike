@@ -30,7 +30,7 @@ public class MapManager : MonoBehaviour
     public TileBase WallTile;
     public TileBase FogTile;
 
-    [Header("Features")]
+    
     public Dictionary<Vector2Int, Node> Nodes { get; private set; } = new Dictionary<Vector2Int, Node>();
     public List<Vector3Int> VisibleTiles { get; private set; }
     public Dictionary<Vector3Int, TileData> Tiles { get; private set; }
