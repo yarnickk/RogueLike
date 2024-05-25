@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-       
+        // Initialisatiecode indien nodig
     }
 
     public static GameManager Get => instance;
@@ -39,33 +39,44 @@ public class GameManager : MonoBehaviour
         Enemies.Add(enemy);
     }
 
-    public GameObject CreateActor(string name, Vector2 position)
+    public void RemoveEnemy(Actor enemy)
     {
-        GameObject actor = Instantiate(Resources.Load<GameObject>($"Prefabs/{name}"), new Vector3(position.x + 0.5f, position.y + 0.5f, 0), Quaternion.identity);
-
-        if (actor == null)
+        if (enemy == null)
         {
-            Debug.LogError($"Prefab for {name} could not be loaded.");
-            return null;
+            Debug.LogError("Attempted to remove null enemy from the GameManager.");
+            return;
         }
 
-        Actor actorComponent = actor.GetComponent<Actor>();
-        if (actorComponent == null)
+        if (Enemies.Contains(enemy))
         {
-            Debug.LogError("Actor component is missing on the instantiated prefab.");
-            return null;
-        }
-
-        if (name == "Player")
-        {
-            Player = actorComponent;
+            Enemies.Remove(enemy);
         }
         else
         {
-            AddEnemy(actorComponent);
+            Debug.LogError("Attempted to remove enemy that is not in the list.");
+        }
+    }
+
+    public GameObject CreateActor(string prefabName, Vector3 position)
+    {
+        GameObject actor = Instantiate(Resources.Load<GameObject>($"Prefabs/{prefabName}"), new Vector3(position.x + 0.5f, position.y + 0.5f, 0), Quaternion.identity);
+
+        if (actor == null)
+        {
+            Debug.LogError($"Prefab for {prefabName} could not be loaded.");
+            return null;
         }
 
-        actor.name = name;
+        if (prefabName == "Player")
+        {
+            Player = actor.GetComponent<Actor>();
+        }
+        else if (prefabName != "GravestonePrefabName")
+        {
+            AddEnemy(actor.GetComponent<Actor>());
+        }
+
+        actor.name = prefabName;
         return actor;
     }
 
@@ -99,30 +110,6 @@ public class GameManager : MonoBehaviour
                     enemyComponent.RunAI();
                 }
             }
-        }
-    }
-
-    public static class Action
-    {
-        static private void EndTurn(Actor actor)
-        {
-            if (actor.GetComponent<Player>() != null)
-            {
-                GameManager.Get.StartEnemyTurn();
-            }
-        }
-
-        static public void Move(Actor actor, Vector2 direction)
-        {
-            Actor target = GameManager.Get.GetActorAtLocation(actor.transform.position + (Vector3)direction);
-
-            if (target == null)
-            {
-                actor.Move(direction);
-                actor.UpdateFieldOfView();
-            }
-
-            EndTurn(actor);
         }
     }
 }

@@ -1,15 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class DungeonGenerator : MonoBehaviour
 {
-    public int maxEnemies = 2; 
-
     private int width, height;
     private int maxRoomSize, minRoomSize;
     private int maxRooms;
-    private List<Room> rooms = new List<Room>();
+    private int maxEnemies;
+
+    List<Room> rooms = new List<Room>();
 
     public void SetSize(int width, int height)
     {
@@ -45,59 +46,67 @@ public class DungeonGenerator : MonoBehaviour
             int roomX = Random.Range(0, width - roomWidth - 1);
             int roomY = Random.Range(0, height - roomHeight - 1);
 
-            Room room = new Room(roomX, roomY, roomWidth, roomHeight);
+            var room = new Room(roomX, roomY, roomWidth, roomHeight);
+
 
             if (room.Overlaps(rooms))
             {
                 continue;
             }
 
-            CreateRoom(room);
+
+            for (int x = roomX; x < roomX + roomWidth; x++)
+            {
+                for (int y = roomY; y < roomY + roomHeight; y++)
+                {
+                    if (x == roomX
+                        || x == roomX + roomWidth - 1
+                        || y == roomY
+                        || y == roomY + roomHeight - 1)
+                    {
+                        if (!TrySetWallTile(new Vector3Int(x, y)))
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        SetFloorTile(new Vector3Int(x, y, 0));
+                    }
+
+                }
+            }
+
+
             if (rooms.Count != 0)
             {
                 TunnelBetween(rooms[rooms.Count - 1], room);
             }
-
             PlaceEnemies(room, maxEnemies);
             rooms.Add(room);
         }
-
-        GameManager.Get.CreateActor("Player", rooms[0].Center());
-    }
-
-    private void CreateRoom(Room room)
-    {
-        for (int x = room.X; x < room.X + room.Width; x++)
-        {
-            for (int y = room.Y; y < room.Y + room.Height; y++)
-            {
-                Vector3Int pos = new Vector3Int(x, y, 0);
-                if (x == room.X || x == room.X + room.Width - 1 || y == room.Y || y == room.Y + room.Height - 1)
-                {
-                    TrySetWallTile(pos);
-                }
-                else
-                {
-                    SetFloorTile(pos);
-                }
-            }
-        }
+        var player = GameManager.Get.CreateActor("Player", rooms[0].Center());
     }
 
     private bool TrySetWallTile(Vector3Int pos)
     {
-        if (MapManager.Get.FloorMap.GetTile(pos) != null)
+
+        if (MapManager.Get.FloorMap.GetTile(pos))
         {
             return false;
         }
+        else
+        {
 
-        MapManager.Get.ObstacleMap.SetTile(pos, MapManager.Get.WallTile);
-        return true;
+            MapManager.Get.ObstacleMap.SetTile(pos, MapManager.Get.WallTile);
+            return true;
+        }
     }
 
     private void SetFloorTile(Vector3Int pos)
     {
-        if (MapManager.Get.ObstacleMap.GetTile(pos) != null)
+
+        if (MapManager.Get.ObstacleMap.GetTile(pos))
         {
             MapManager.Get.ObstacleMap.SetTile(pos, null);
         }
@@ -109,24 +118,37 @@ public class DungeonGenerator : MonoBehaviour
     {
         Vector2Int oldRoomCenter = oldRoom.Center();
         Vector2Int newRoomCenter = newRoom.Center();
-        Vector2Int tunnelCorner = Random.value < 0.5f
-                                  ? new Vector2Int(newRoomCenter.x, oldRoomCenter.y)
-                                  : new Vector2Int(oldRoomCenter.x, newRoomCenter.y);
+        Vector2Int tunnelCorner;
+
+        if (Random.value < 0.5f)
+        {
+
+            tunnelCorner = new Vector2Int(newRoomCenter.x, oldRoomCenter.y);
+        }
+        else
+        {
+
+            tunnelCorner = new Vector2Int(oldRoomCenter.x, newRoomCenter.y);
+        }
+
 
         List<Vector2Int> tunnelCoords = new List<Vector2Int>();
         BresenhamLine.Compute(oldRoomCenter, tunnelCorner, tunnelCoords);
         BresenhamLine.Compute(tunnelCorner, newRoomCenter, tunnelCoords);
 
-        foreach (Vector2Int coord in tunnelCoords)
-        {
-            Vector3Int pos = new Vector3Int(coord.x, coord.y, 0);
-            SetFloorTile(pos);
 
-            for (int x = coord.x - 1; x <= coord.x + 1; x++)
+        for (int i = 0; i < tunnelCoords.Count; i++)
+        {
+            SetFloorTile(new Vector3Int(tunnelCoords[i].x, tunnelCoords[i].y));
+
+            for (int x = tunnelCoords[i].x - 1; x <= tunnelCoords[i].x + 1; x++)
             {
-                for (int y = coord.y - 1; y <= coord.y + 1; y++)
+                for (int y = tunnelCoords[i].y - 1; y <= tunnelCoords[i].y + 1; y++)
                 {
-                    TrySetWallTile(new Vector3Int(x, y, 0));
+                    if (!TrySetWallTile(new Vector3Int(x, y, 0)))
+                    {
+                        continue;
+                    }
                 }
             }
         }
@@ -134,15 +156,21 @@ public class DungeonGenerator : MonoBehaviour
 
     private void PlaceEnemies(Room room, int maxEnemies)
     {
-        int numEnemies = Random.Range(0, maxEnemies + 1);
+        int num = Random.Range(0, maxEnemies + 1);
 
-        for (int i = 0; i < numEnemies; i++)
+        for (int counter = 0; counter < num; counter++)
         {
             int x = Random.Range(room.X + 1, room.X + room.Width - 1);
             int y = Random.Range(room.Y + 1, room.Y + room.Height - 1);
-            string enemyType = Random.value < 0.5f ? "Ant" : "Tiger";
 
-            GameObject gameObject1 = GameManager.Get.CreateActor(enemyType, new Vector2(x, y));
+            if (Random.value < 0.5f)
+            {
+                GameManager.Get.CreateActor("Ant", new Vector2(x, y));
+            }
+            else
+            {
+                GameManager.Get.CreateActor("Tiger", new Vector2(x, y));
+            }
         }
     }
 }

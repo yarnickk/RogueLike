@@ -1,60 +1,24 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(Actor), typeof(AStar))]
 public class Enemy : MonoBehaviour
 {
-    public Actor Target { get; set; }
-    public bool IsFighting { get; private set; } = false;
+    public Actor Target;
+    public bool IsFighting = false;
     private AStar algorithm;
 
     private void Start()
     {
+        GameManager.Get.AddEnemy(GetComponent<Actor>());
         algorithm = GetComponent<AStar>();
-        if (algorithm == null)
-        {
-            Debug.LogError($"{gameObject.name}: AStar component is missing.");
-        }
-
-        Actor actor = GetComponent<Actor>();
-        if (actor == null)
-        {
-            Debug.LogError($"{gameObject.name}: Actor component is missing.");
-            return;
-        }
-
-        GameManager.Get.AddEnemy(actor);
-    }
-
-    private void Update()
-    {
-        RunAI();
     }
 
     public void MoveAlongPath(Vector3Int targetPosition)
     {
-        if (algorithm == null)
-        {
-            Debug.LogError($"{gameObject.name}: Algorithm is not initialized.");
-            return;
-        }
-
         Vector3Int gridPosition = MapManager.Get.FloorMap.WorldToCell(transform.position);
         Vector2 direction = algorithm.Compute((Vector2Int)gridPosition, (Vector2Int)targetPosition);
-
-        if (direction == Vector2.zero)
-        {
-            Debug.LogError($"{gameObject.name}: Algorithm.Compute returned zero direction.");
-            return;
-        }
-
-        Actor actor = GetComponent<Actor>();
-        if (actor == null)
-        {
-            Debug.LogError($"{gameObject.name}: Actor component is missing.");
-            return;
-        }
-
-        Action.Move(actor, direction);
+        Action.MoveOrHit(GetComponent<Actor>(), direction);
     }
 
     public void RunAI()
@@ -62,25 +26,21 @@ public class Enemy : MonoBehaviour
         if (Target == null)
         {
             Target = GameManager.Get.Player;
-            if (Target == null)
-            {
-                Debug.LogError($"{gameObject.name}: Target is null, GameManager.Get.Player is not assigned.");
-                return;
-            }
         }
 
-        Vector3Int gridPosition = MapManager.Get.FloorMap.WorldToCell(Target.transform.position);
+        Vector3 targetPosition = Target.transform.position;
+        float distanceToTarget = Vector3.Distance(transform.position, targetPosition);
 
-        Actor actor = GetComponent<Actor>();
-        if (actor == null)
+        if (distanceToTarget < 1.5f)
         {
-            Debug.LogError($"{gameObject.name}: Actor component is missing.");
-            return;
+            
+            Action.Hit(GetComponent<Actor>(), Target);
+            IsFighting = true; 
         }
-
-        if (IsFighting || actor.FieldOfView.Contains(gridPosition))
+        else
         {
-            IsFighting = true;
+            
+            var gridPosition = MapManager.Get.FloorMap.WorldToCell(targetPosition);
             MoveAlongPath(gridPosition);
         }
     }
