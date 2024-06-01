@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 public class MapManager : MonoBehaviour
 {
     private static MapManager instance;
-
+    public int maxItems = 2;
     private void Awake()
     {
         if (instance == null)
@@ -30,7 +30,6 @@ public class MapManager : MonoBehaviour
     public TileBase WallTile;
     public TileBase FogTile;
 
-    
     public Dictionary<Vector2Int, Node> Nodes { get; private set; } = new Dictionary<Vector2Int, Node>();
     public List<Vector3Int> VisibleTiles { get; private set; }
     public Dictionary<Vector3Int, TileData> Tiles { get; private set; }
@@ -56,6 +55,13 @@ public class MapManager : MonoBehaviour
 
     private void GenerateDungeon()
     {
+        DungeonGenerator dungeonGenerator = GetComponent<DungeonGenerator>();
+        if (dungeonGenerator != null)
+        {
+            dungeonGenerator.SetMaxItems(maxItems);
+            // Call dungeon generation logic
+        }
+
         Tiles = new Dictionary<Vector3Int, TileData>();
         VisibleTiles = new List<Vector3Int>();
 

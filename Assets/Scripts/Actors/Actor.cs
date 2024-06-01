@@ -1,4 +1,3 @@
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -85,6 +84,19 @@ public class Actor : MonoBehaviour
         if (hitPoints == 0)
         {
             Die();
+        }
+    }
+    public void Heal(int hp)
+    {
+        hitPoints += hp;
+        if (hitPoints > maxHitPoints)
+        {
+            hitPoints = maxHitPoints;
+        }
+
+        if (GetComponent<Player>())
+        {
+            UIManager.Instance.UpdateHealth(hitPoints, maxHitPoints);
         }
     }
 }

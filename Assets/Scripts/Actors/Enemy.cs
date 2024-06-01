@@ -7,7 +7,7 @@ public class Enemy : MonoBehaviour
     public Actor Target;
     public bool IsFighting = false;
     private AStar algorithm;
-
+    public int confused = 0;
     private void Start()
     {
         GameManager.Get.AddEnemy(GetComponent<Actor>());
@@ -19,6 +19,10 @@ public class Enemy : MonoBehaviour
         Vector3Int gridPosition = MapManager.Get.FloorMap.WorldToCell(transform.position);
         Vector2 direction = algorithm.Compute((Vector2Int)gridPosition, (Vector2Int)targetPosition);
         Action.MoveOrHit(GetComponent<Actor>(), direction);
+    }
+    public void Confuse()
+    {
+        confused = 8;
     }
 
     public void RunAI()
@@ -33,15 +37,22 @@ public class Enemy : MonoBehaviour
 
         if (distanceToTarget < 1.5f)
         {
-            
+
             Action.Hit(GetComponent<Actor>(), Target);
-            IsFighting = true; 
+            IsFighting = true;
         }
         else
         {
-            
+
             var gridPosition = MapManager.Get.FloorMap.WorldToCell(targetPosition);
             MoveAlongPath(gridPosition);
+        }
+
+        if (confused > 0)
+        {
+            Debug.Log("The enemy is confused and cannot act");
+            confused--;
+            return;
         }
     }
 }

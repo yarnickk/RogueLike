@@ -1,0 +1,13 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement style="flex-grow: 1; -unity-background-image-tint-color: rgb(0, 19, 140); background-color: rgba(14, 45, 213, 0);">
+        <ui:Label tabindex="-1" text="Inventory&#10;" parse-escape-sequences="true" display-tooltip-when-elided="true" name="INVENTORY" style="-unity-text-align: upper-center;" />
+        <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="item1" style="-unity-text-align: upper-center;" />
+        <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="item2" style="-unity-text-align: upper-center;" />
+        <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="item3" style="-unity-text-align: upper-center;" />
+        <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="item4" style="-unity-text-align: upper-center;" />
+        <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="item5" style="-unity-text-align: upper-center;" />
+        <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="item6" style="-unity-text-align: upper-center;" />
+        <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="item7" style="-unity-text-align: upper-center;" />
+        <ui:Label tabindex="-1" text="Label" parse-escape-sequences="true" display-tooltip-when-elided="true" name="item8" style="white-space: nowrap; -unity-text-align: upper-center;" />
+    </ui:VisualElement>
+</ui:UXML>

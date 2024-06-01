@@ -16,6 +16,7 @@ public class Action : MonoBehaviour
         {
             Hit(actor, target);
         }
+        
     }
 
     static public void Move(Actor actor, Vector2 direction)
@@ -38,4 +39,13 @@ public class Action : MonoBehaviour
             UIManager.Instance.AddMessage($"{actor.name} hits {target.name} but does no damage.", actor.GetComponent<Player>() != null ? Color.white : Color.red);
         }
     }
+
+    static private void EndTurn(Actor actor)
+    {
+        if (actor.GetComponent<Player>())
+        {
+            GameManager.Get.StartEnemyTurn();
+        }
+    }
+
 }

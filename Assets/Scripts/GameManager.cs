@@ -9,6 +9,9 @@ public class GameManager : MonoBehaviour
 
     public List<Actor> Enemies { get; private set; } = new List<Actor>();
 
+    // Nieuwe lijst om Consumable-items bij te houden
+    private List<Consumable> consumableItems = new List<Consumable>();
+
     private void Awake()
     {
         if (instance == null)
@@ -95,6 +98,27 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        return null;
+    }
+
+    // Nieuwe methoden om Consumable-items toe te voegen, te verwijderen en op locatie te vinden
+    public void AddItem(Consumable item)
+    {
+        consumableItems.Add(item);
+    }
+
+    public void RemoveItem(Consumable item)
+    {
+        consumableItems.Remove(item);
+    }
+
+    public Consumable GetItemAtLocation(Vector3 location)
+    {
+        foreach (var item in consumableItems)
+        {
+            if (item.transform.position == location)
+                return item;
+        }
         return null;
     }
 

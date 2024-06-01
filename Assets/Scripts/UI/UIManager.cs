@@ -4,6 +4,13 @@ using UnityEngine;
 
 public class UIManager : MonoBehaviour
 {
+
+    public GameObject inventory;
+    public InventoryUI inventoryUI;
+
+    public InventoryUI InventoryUI { get { return inventory.GetComponent<InventoryUI>(); } }
+
+
     public static UIManager Instance { get; private set; }
 
     [Header("Documents")]
