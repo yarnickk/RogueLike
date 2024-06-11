@@ -4,6 +4,21 @@ using UnityEngine;
 [RequireComponent(typeof(Actor), typeof(AStar))]
 public class Enemy : MonoBehaviour
 {
+
+    public string enemyName;
+    public int hitPoints;
+    public int power;
+    public int defense;
+    public int experience;
+    public Enemy(string name, int hp, int pow, int def, int exp)
+    {
+        enemyName = name;
+        hitPoints = hp;
+        power = pow;
+        defense = def;
+        experience = exp;
+    }
+
     public Actor Target;
     public bool IsFighting = false;
     private AStar algorithm;
@@ -55,4 +70,5 @@ public class Enemy : MonoBehaviour
             return;
         }
     }
+
 }

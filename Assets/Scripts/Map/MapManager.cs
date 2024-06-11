@@ -6,6 +6,8 @@ public class MapManager : MonoBehaviour
 {
     private static MapManager instance;
     public int maxItems = 2;
+    private int floor = 0; // Variabele toegevoegd
+
     private void Awake()
     {
         if (instance == null)
@@ -55,6 +57,11 @@ public class MapManager : MonoBehaviour
 
     private void GenerateDungeon()
     {
+        // Voeg code toe om alle tiles te verwijderen uit FloorMap, ObstacleMap en FogMap
+        FloorMap.ClearAllTiles();
+        ObstacleMap.ClearAllTiles();
+        FogMap.ClearAllTiles();
+
         DungeonGenerator dungeonGenerator = GetComponent<DungeonGenerator>();
         if (dungeonGenerator != null)
         {
@@ -148,5 +155,19 @@ public class MapManager : MonoBehaviour
                 VisibleTiles.Add(pos);
             }
         }
+    }
+
+    // Nieuwe functie toegevoegd om de verdieping omhoog te bewegen
+    public void MoveUp()
+    {
+        floor++;
+        GenerateDungeon();
+    }
+
+    // Nieuwe functie toegevoegd om de verdieping omlaag te bewegen
+    public void MoveDown()
+    {
+        floor--;
+        GenerateDungeon();
     }
 }

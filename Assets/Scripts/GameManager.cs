@@ -1,86 +1,64 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    private static GameManager instance;
+    private static GameManager _instance;
 
-    public Actor Player { get; set; }
+    
+    public static GameManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+            {
+                Debug.LogError("GameManager is null. Make sure it exists in the scene.");
+            }
+            return _instance;
+        }
+    }
 
-    public List<Actor> Enemies { get; private set; } = new List<Actor>();
-
-    // Nieuwe lijst om Consumable-items bij te houden
-    private List<Consumable> consumableItems = new List<Consumable>();
-
+    
     private void Awake()
     {
-        if (instance == null)
+        if (_instance == null)
         {
-            instance = this;
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
         }
-        else if (instance != this)
+        else if (_instance != this)
         {
             Destroy(gameObject);
         }
     }
 
-    private void Start()
-    {
-        // Initialisatiecode indien nodig
-    }
+    
+    public Actor Player { get; private set; }
+    public List<Actor> Enemies { get; private set; } = new List<Actor>();
+    public List<Consumable> Items { get; private set; } = new List<Consumable>();
+    public List<Ladder> Ladders { get; private set; } = new List<Ladder>();
+    public List<Tombstone> Tombstones { get; private set; } = new List<Tombstone>();
 
-    public static GameManager Get => instance;
+    
+    public GameObject CreateActor(string name, Vector2 position)
+    {
+        return InstantiatePrefab($"Prefabs/{name}", position, $"Failed to create actor: {name}");
+    }
 
     public void AddEnemy(Actor enemy)
     {
-        if (enemy == null)
-        {
-            Debug.LogError("Attempted to add null enemy to the GameManager.");
-            return;
-        }
-
         Enemies.Add(enemy);
+        UpdateEnemiesLeftText();
     }
 
     public void RemoveEnemy(Actor enemy)
     {
-        if (enemy == null)
+        if (Enemies.Remove(enemy))
         {
-            Debug.LogError("Attempted to remove null enemy from the GameManager.");
-            return;
+            Destroy(enemy.gameObject);
+            UpdateEnemiesLeftText();
         }
-
-        if (Enemies.Contains(enemy))
-        {
-            Enemies.Remove(enemy);
-        }
-        else
-        {
-            Debug.LogError("Attempted to remove enemy that is not in the list.");
-        }
-    }
-
-    public GameObject CreateActor(string prefabName, Vector3 position)
-    {
-        GameObject actor = Instantiate(Resources.Load<GameObject>($"Prefabs/{prefabName}"), new Vector3(position.x + 0.5f, position.y + 0.5f, 0), Quaternion.identity);
-
-        if (actor == null)
-        {
-            Debug.LogError($"Prefab for {prefabName} could not be loaded.");
-            return null;
-        }
-
-        if (prefabName == "Player")
-        {
-            Player = actor.GetComponent<Actor>();
-        }
-        else if (prefabName != "GravestonePrefabName")
-        {
-            AddEnemy(actor.GetComponent<Actor>());
-        }
-
-        actor.name = prefabName;
-        return actor;
     }
 
     public Actor GetActorAtLocation(Vector3 location)
@@ -90,50 +68,186 @@ public class GameManager : MonoBehaviour
             return Player;
         }
 
-        foreach (var enemy in Enemies)
-        {
-            if (enemy != null && enemy.transform.position == location)
-            {
-                return enemy;
-            }
-        }
-
-        return null;
+        return Enemies.Find(enemy => enemy.transform.position == location);
     }
 
-    // Nieuwe methoden om Consumable-items toe te voegen, te verwijderen en op locatie te vinden
+    
+    public GameObject CreateItem(string itemName, Vector2 position)
+    {
+        return InstantiatePrefab($"Prefabs/{itemName}", position, $"Failed to create item: {itemName}");
+    }
+
     public void AddItem(Consumable item)
     {
-        consumableItems.Add(item);
+        Items.Add(item);
     }
 
     public void RemoveItem(Consumable item)
     {
-        consumableItems.Remove(item);
+        if (Items.Remove(item))
+        {
+            Destroy(item.gameObject);
+        }
     }
 
     public Consumable GetItemAtLocation(Vector3 location)
     {
-        foreach (var item in consumableItems)
-        {
-            if (item.transform.position == location)
-                return item;
-        }
-        return null;
+        return Items.Find(item => item.transform.position == location);
     }
 
+    
+    public void CreateLadder(Vector2 position, bool up)
+    {
+        GameObject ladderObject = InstantiatePrefab("Prefabs/Ladder", position, "Failed to load ladder prefab");
+        if (ladderObject != null)
+        {
+            Ladder ladder = ladderObject.GetComponent<Ladder>();
+            if (ladder != null)
+            {
+                ladder.Up = up;
+                Ladders.Add(ladder);
+            }
+            else
+            {
+                Debug.LogError("Failed to create ladder: Ladder component is missing.");
+                Destroy(ladderObject);
+            }
+        }
+    }
+
+    public void AddLadder(Ladder ladder)
+    {
+        Ladders.Add(ladder);
+    }
+
+    public Ladder GetLadderAtLocation(Vector3 location)
+    {
+        return Ladders.Find(ladder => ladder.transform.position == location);
+    }
+
+    
+    public void AddTombstone(Tombstone stone)
+    {
+        Tombstones.Add(stone);
+    }
+
+    
+    public void MoveActorToPosition(Actor actor, Vector2 position)
+    {
+        if (actor != null)
+        {
+            actor.transform.position = new Vector3(position.x, position.y, 0);
+        }
+        else
+        {
+            Debug.LogError("Failed to move actor: Actor is null.");
+        }
+    }
+
+    
     public void StartEnemyTurn()
     {
         foreach (var enemy in Enemies)
         {
-            if (enemy != null)
-            {
-                Enemy enemyComponent = enemy.GetComponent<Enemy>();
-                if (enemyComponent != null)
-                {
-                    enemyComponent.RunAI();
-                }
-            }
+            enemy.GetComponent<Enemy>().RunAI();
         }
+    }
+
+    
+    public List<Actor> GetNearbyEnemies(Vector3 location, float radius = 5f)
+    {
+        return Enemies.FindAll(enemy => Vector3.Distance(enemy.transform.position, location) < radius);
+    }
+
+    
+    [Serializable]
+    public struct SaveGame
+    {
+        public int maxHitPoints;
+        public int hitPoints;
+        public int defense;
+        public int power;
+        public int level;
+        public int xp;
+        public int xpToNextLevel;
+    }
+
+    private SaveGame _playerSaveData;
+
+    public void SavePlayerData()
+    {
+        _playerSaveData = new SaveGame
+        {
+            maxHitPoints = Player.MaxHitPoints,
+            hitPoints = Player.HitPoints,
+            defense = Player.Defense,
+            power = Player.Power,
+            level = Player.Level,
+            xp = Player.XP,
+            xpToNextLevel = Player.XPToNextLevel
+        };
+
+        string jsonData = JsonUtility.ToJson(_playerSaveData);
+        PlayerPrefs.SetString("PlayerSaveData", jsonData);
+        PlayerPrefs.Save();
+    }
+
+    public void LoadPlayerData()
+    {
+        if (PlayerPrefs.HasKey("PlayerSaveData"))
+        {
+            string jsonData = PlayerPrefs.GetString("PlayerSaveData");
+            _playerSaveData = JsonUtility.FromJson<SaveGame>(jsonData);
+
+            Player.MaxHitPoints = _playerSaveData.maxHitPoints;
+            Player.HitPoints = _playerSaveData.hitPoints;
+            Player.Defense = _playerSaveData.defense;
+            Player.Power = _playerSaveData.power;
+            Player.Level = _playerSaveData.level;
+            Player.XP = _playerSaveData.xp;
+            Player.XPToNextLevel = _playerSaveData.xpToNextLevel;
+        }
+    }
+
+    public void RemoveSaveGame()
+    {
+        PlayerPrefs.DeleteKey("PlayerSaveData");
+        PlayerPrefs.Save();
+    }
+
+    
+    public void ClearFloor()
+    {
+        ClearList(Enemies);
+        ClearList(Items);
+        ClearList(Ladders);
+        ClearList(Tombstones);
+        UpdateEnemiesLeftText();
+    }
+
+    
+    private GameObject InstantiatePrefab(string path, Vector2 position, string errorMessage)
+    {
+        GameObject prefab = Resources.Load<GameObject>(path);
+        if (prefab == null)
+        {
+            Debug.LogError(errorMessage);
+            return null;
+        }
+        return Instantiate(prefab, new Vector3(position.x, position.y, 0), Quaternion.identity);
+    }
+
+    private void UpdateEnemiesLeftText()
+    {
+        UIManager.Instance.UpdateEnemiesLeftText(Enemies.Count);
+    }
+
+    private void ClearList<T>(List<T> list) where T : MonoBehaviour
+    {
+        foreach (var item in list)
+        {
+            Destroy(item.gameObject);
+        }
+        list.Clear();
     }
 }

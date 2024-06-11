@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
 
     public GameObject inventory;
     public InventoryUI inventoryUI;
+    public Healthbar healthbar;
 
     public InventoryUI InventoryUI { get { return inventory.GetComponent<InventoryUI>(); } }
 
@@ -46,5 +47,28 @@ public class UIManager : MonoBehaviour
     public void AddMessage(string message, Color color)
     {
         Messages.GetComponent<Messages>().AddMessage(message, color);
+    }
+    public void UpdateHealthbar(int currentHealth, int maxHealth)
+    {
+        if (healthbar != null)
+        {
+            healthbar.SetHealth(currentHealth, maxHealth);
+        }
+    }
+
+    public void UpdateLevel(int level)
+    {
+        if (healthbar != null)
+        {
+            healthbar.SetLevel(level);
+        }
+    }
+
+    public void UpdateXP(int xp, int xpToNextLevel)
+    {
+        if (healthbar != null)
+        {
+            healthbar.SetXP(xp, xpToNextLevel);
+        }
     }
 }
